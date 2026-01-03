@@ -29,7 +29,7 @@ app.use('/api/invoices', require('./routes/invoices'));
 
 // Fallback for frontend
 app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/customer/index.html'));
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 const PORT = process.env.PORT || 5000;

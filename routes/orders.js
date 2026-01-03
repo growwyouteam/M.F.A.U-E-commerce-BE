@@ -2,13 +2,13 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product'); // To update stats if needed
-const { protect } = require('../middleware/authMiddleware');
+const { protect, protectCustomer } = require('../middleware/authMiddleware');
 
 // @route   POST api/orders
 // @desc    Create new order
-// @access  Public
-router.post('/', async (req, res) => {
-    const { customerName, phone, address, items, totalAmount } = req.body;
+// @access  Private (Customer)
+router.post('/', protectCustomer, async (req, res) => {
+    const { address, items, totalAmount } = req.body;
 
     if (!items || items.length === 0) {
         return res.status(400).json({ message: 'No order items' });
@@ -16,8 +16,10 @@ router.post('/', async (req, res) => {
 
     try {
         const order = new Order({
-            customerName,
-            phone,
+            customerId: req.customer._id,
+            email: req.customer.email,
+            customerName: req.customer.name,
+            phone: req.customer.phone,
             address,
             items,
             totalAmount
@@ -25,12 +27,23 @@ router.post('/', async (req, res) => {
 
         const createdOrder = await order.save();
 
-        // Use a simple loop for stat updates if needed in future, but for MVP just save.
-        // Could decrement stock here.
-
         res.status(201).json(createdOrder);
     } catch (error) {
         res.status(400).json({ message: error.message });
+    }
+});
+
+// @route   GET api/orders/my-orders
+// @desc    Get orders for authenticated customer
+// @access  Private (Customer)
+router.get('/my-orders', protectCustomer, async (req, res) => {
+    try {
+        const orders = await Order.find({ customerId: req.customer._id })
+            .sort({ createdAt: -1 })
+            .populate('items.productId', 'name');
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
