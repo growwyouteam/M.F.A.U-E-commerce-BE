@@ -1,0 +1,89 @@
+const express = require('express');
+const router = express.Router();
+const Order = require('../models/Order');
+const Product = require('../models/Product'); // To update stats if needed
+const { protect } = require('../middleware/authMiddleware');
+
+// @route   POST api/orders
+// @desc    Create new order
+// @access  Public
+router.post('/', async (req, res) => {
+    const { customerName, phone, address, items, totalAmount } = req.body;
+
+    if (!items || items.length === 0) {
+        return res.status(400).json({ message: 'No order items' });
+    }
+
+    try {
+        const order = new Order({
+            customerName,
+            phone,
+            address,
+            items,
+            totalAmount
+        });
+
+        const createdOrder = await order.save();
+
+        // Use a simple loop for stat updates if needed in future, but for MVP just save.
+        // Could decrement stock here.
+
+        res.status(201).json(createdOrder);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+// @route   GET api/orders
+// @desc    Get all orders
+// @access  Private/Admin
+router.get('/', protect, async (req, res) => {
+    try {
+        const orders = await Order.find().sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   GET api/orders/stats
+// @desc    Get dashboard stats
+// @access  Private/Admin
+router.get('/stats', protect, async (req, res) => {
+    try {
+        const totalOrders = await Order.countDocuments();
+        const pendingOrders = await Order.countDocuments({ status: 'Pending' });
+        const totalProducts = await Product.countDocuments(); // Need Product model
+        const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5);
+
+        res.json({
+            totalOrders,
+            pendingOrders,
+            totalProducts,
+            recentOrders
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   PUT api/orders/:id/status
+// @desc    Update order status
+// @access  Private/Admin
+router.put('/:id/status', protect, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (order) {
+            order.status = req.body.status || order.status;
+            const updatedOrder = await order.save();
+            res.json(updatedOrder);
+        } else {
+            res.status(404).json({ message: 'Order not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+module.exports = router;
