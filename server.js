@@ -14,10 +14,12 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
-
-// Static Files
-app.use(express.static(path.join(__dirname, '../frontend')));
+// CORS Configuration
+const corsOptions = {
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://mfau.netlify.app'],
+    credentials: true
+};
+app.use(cors(corsOptions));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -27,11 +29,17 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/home', require('./routes/home'));
 app.use('/api/invoices', require('./routes/invoices'));
 
-// Fallback for frontend
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', message: 'Server is running' });
 });
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Only start server if not in Vercel environment
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+// Export for Vercel serverless
+module.exports = app;
