@@ -21,6 +21,7 @@ const productSchema = new mongoose.Schema({
     priceTiers: [{
         quantity: { type: String, required: true }, // e.g., "1kg", "150g", "2x150g"
         price: { type: Number, required: true },
+        mrp: { type: Number },
         unit: { type: String } // optional, e.g., "pack", "bottle"
     }],
     stock: { type: Number, required: true, default: 0 },

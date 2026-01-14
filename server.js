@@ -16,7 +16,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // CORS Configuration
 const corsOptions = {
-    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://mfau.netlify.app'],
+    origin: ['http://localhost:3000', 'http://localhost:5173', 'https://mfau.netlify.app', 'http://127.0.0.1:5500', 'http://localhost:5500'],
     credentials: true
 };
 app.use(cors(corsOptions));
