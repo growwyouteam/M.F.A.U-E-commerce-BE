@@ -12,6 +12,10 @@ router.get('/', async (req, res) => {
         if (req.query.admin !== 'true') {
             query.status = 'active';
         }
+
+        if (req.query.category) {
+            query.categoryId = req.query.category;
+        }
         const products = await Product.find(query).populate('categoryId', 'name');
         res.json(products);
     } catch (error) {
