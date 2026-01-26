@@ -28,6 +28,7 @@ app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/home', require('./routes/home'));
 app.use('/api/invoices', require('./routes/invoices'));
+app.use('/api/settings', require('./routes/settings'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
